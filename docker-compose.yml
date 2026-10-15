@@ -1,0 +1,120 @@
+services:
+  # ==========================================
+  # Core Infrastructure
+  # ==========================================
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: deepinsight-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-deepinsight}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: deepinsight-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==========================================
+  # Backend Services
+  # ==========================================
+  api:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: deepinsight-api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-deepinsight}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  celery_worker:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: deepinsight-celery-worker
+    command: celery -A api.core.tasks.celery_app worker --loglevel=info -Q default,heavy_processing
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-deepinsight}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery_beat:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: deepinsight-celery-beat
+    # Drives celery_app.conf.beat_schedule (currently: reconcile-stale-integration-syncs).
+    # Without this service the schedule is defined but nothing ever fires it.
+    command: celery -A api.core.tasks.celery_app beat --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-deepinsight}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ==========================================
+  # Frontend Application
+  # ==========================================
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: deepinsight-frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

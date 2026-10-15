@@ -1,0 +1,101 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@import "./tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+  
+  --color-sidebar-ring: var(--ring);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-accent-foreground: var(--accent-foreground);
+  --color-sidebar-accent: var(--accent);
+  --color-sidebar-primary-foreground: var(--primary-foreground);
+  --color-sidebar-primary: var(--primary);
+  --color-sidebar-foreground: var(--foreground);
+  --color-sidebar: var(--card);
+  
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+:root {
+  /* Light Theme - Clean, Editorial, Premium */
+  --background: #FFFFFF;
+  --foreground: #1A202C;
+  --card: #FFFFFF;
+  --card-foreground: #1A202C;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A202C;
+  --primary: #36424A; /* Slate */
+  --primary-foreground: #FFFFFF;
+  --secondary: #00A19C; /* Teal */
+  --secondary-foreground: #FFFFFF;
+  --muted: #F7F7F7;
+  --muted-foreground: #7D7D7D;
+  --accent: #FED925; /* Gold */
+  --accent-foreground: #1A202C;
+  --destructive: #E53E3E;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #36424A;
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Dark Theme - Deep Slate, Premium */
+  --background: #06262D; /* Deep Teal/Dark */
+  --foreground: #F7F7F7;
+  --card: #153238; /* Slightly lighter than bg */
+  --card-foreground: #F7F7F7;
+  --popover: #153238;
+  --popover-foreground: #F7F7F7;
+  --primary: #FED925; /* Gold */
+  --primary-foreground: #06262D;
+  --secondary: #00A19C; /* Teal */
+  --secondary-foreground: #FFFFFF;
+  --muted: #1E3F45;
+  --muted-foreground: #A0AEC0;
+  --accent: #36424A; /* Slate */
+  --accent-foreground: #F7F7F7;
+  --destructive: #FC8181;
+  --border: #2D4E55;
+  --input: #2D4E55;
+  --ring: #FED925;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight;
+  }
+}

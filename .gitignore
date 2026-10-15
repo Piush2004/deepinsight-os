@@ -1,0 +1,13 @@
+docker-compose.override.yml
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Node (root-level safety net; apps/frontend/.gitignore also covers it)
+node_modules/
+apps/frontend/.git.bak-unused/
